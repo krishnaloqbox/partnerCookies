@@ -12,7 +12,7 @@ const setPartnerCookie=(hostDomain, APIURL)=>{
     };
 
     function setCookie(cookieName, cookieValue) {
-        Cookies.set(cookieName, cookieValue, {expires: 30, path: '/', domain: `${hostDomain}`})
+        Cookies.set(cookieName, cookieValue, {expires: 30, path: '/', origin: `${hostDomain}`})
     }
 
     const urlSearchParams = new URLSearchParams(window.location.search);
