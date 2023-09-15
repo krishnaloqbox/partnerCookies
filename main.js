@@ -1,4 +1,4 @@
-const setPartnerCookie=(hostDomain, APIURL)=>{
+const setCookies = function (apiUrl, cookieDomain = '.loqbox.com') {
     const cookiesList = {
         refer: 'loqbox_refer',
         code: 'referral_code',
@@ -11,8 +11,18 @@ const setPartnerCookie=(hostDomain, APIURL)=>{
         referral_channel: 'referral_channel'
     };
 
-    function setCookie(cookieName, cookieValue) {
-        Cookies.set(cookieName, cookieValue, {expires: 30, path: '/', origin: `${hostDomain}`})
+    function getCookie(name) {
+        let value = `; ${document.cookie}`;
+        let parts = value.split(`; ${name}=`);
+
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function setCookie(cookieName, cookieValue, days = 30) {
+        let today = new Date();
+        let expiryDate = new Date(today.setDate(today.getDate() + days)).toUTCString();
+
+        document.cookie = `${cookieName}=${cookieValue};expires=${expiryDate};path=/;origin=${cookieDomain};`
     }
 
     const urlSearchParams = new URLSearchParams(window.location.search);
@@ -39,21 +49,33 @@ const setPartnerCookie=(hostDomain, APIURL)=>{
         }
     }
 
-    // if(Cookies.get('affiliate_ref') && Cookies.get('affiliate_source')){
-    if(params['affiliate_ref'] && params['affiliate_source']){
-        fetch(`${APIURL}/api/partners/cookies`, {
-            method:'POST',
+    if (params['affiliate_source'] || params['dept']) {
+        const previousUuid = getCookie('affiliate_uuid');
+
+        fetch(`${apiUrl}/api/partners/cookies`, {
+            method: 'POST',
             body: JSON.stringify({
-                "affiliate_ref": params['affiliate_ref'],
-                "affiliate_source": params['affiliate_source']
+                'affiliate_ref': params['affiliate_ref'] ?? params['aff'] ?? null,
+                'affiliate_source': params['affiliate_source'] ?? params['dept'],
+                'previous_uuid': previousUuid && previousUuid.length === 36 ? previousUuid : null,
+                'affiliate_external_ref': params['affiliate_external_ref'] ?? params['click_id'] ?? null,
+                'affiliate_external_ref_2': params['affiliate_external_ref_2'] ?? null,
+                'affiliate_external_ref_3': params['affiliate_external_ref_3'] ?? null,
+                'affiliate_external_ref_4': params['affiliate_external_ref_4'] ?? null
             }),
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
         }).then(res => {
-            return res.json()
-        }).then(res=> {
-                setCookie('affiliate_uuid', res.results.uuid);
-            })
+            const json = res.json();
+            if (!res.ok) {
+                throw new Error(json.message ?? 'Something went wrong.');
+            }
+            return json;
+        }).then(res => {
+            setCookie('affiliate_uuid', res.results.uuid);
+        }).catch(err => {
+            // Do nothing
+        });
     }
 }
