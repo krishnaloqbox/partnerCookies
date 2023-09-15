@@ -22,7 +22,7 @@ const setCookies = function (apiUrl, cookieDomain = '.loqbox.com') {
         let today = new Date();
         let expiryDate = new Date(today.setDate(today.getDate() + days)).toUTCString();
 
-        document.cookie = `${cookieName}=${cookieValue};expires=${expiryDate};path=/;origin=${cookieDomain};`
+        document.cookie = `${cookieName}=${cookieValue};expires=${expiryDate};path=/;domain=${cookieDomain};`
     }
 
     const urlSearchParams = new URLSearchParams(window.location.search);
